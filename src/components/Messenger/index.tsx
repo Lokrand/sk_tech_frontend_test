@@ -1,4 +1,5 @@
-import React from "react";
+import React, { FC, useState, useEffect, useRef } from "react";
+
 import { connect, useDispatch } from "react-redux";
 import { Dispatch } from "redux";
 import { mainActions } from "../../actions";
@@ -8,12 +9,20 @@ import {
   getMainMessagesList,
 } from "../../selectors/mainSelector";
 import { MessagesList } from "../../types";
-import styles from "./styles.css";
+import SendIcon from "@mui/icons-material/Send";
+import {
+  Box,
+  Button,
+  Input,
+  InputLabel,
+  Stack,
+  Typography,
+} from "@mui/material";
+import { CustomMuiInput } from "./ui/custom-input";
 
-export interface Props {
+export interface IHome {
   username: string;
   messages: MessagesList;
-
   getMessagesList: Function;
   sendMessage: Function;
 }
@@ -29,75 +38,156 @@ const mapDispatchToProps = (dispatch: Dispatch) => ({
     dispatch(mainActions.mainSendMessage(messageText)),
 });
 
-const Home = (props: Props) => {
+const Home: FC<IHome> = ({
+  username,
+  messages,
+  getMessagesList,
+  sendMessage,
+}) => {
   const dispatch = useDispatch();
-  const { username, messages, getMessagesList, sendMessage } = props;
-  const [messageText, setmessageText] = React.useState("");
+  const [messageText, setmessageText] = useState("");
+  const messagesStackRef = useRef(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
     getMessagesList();
   }, []);
 
+  useEffect(() => {
+    // messagesStackRef.current
+  }, [messages]);
+
   return (
-    <div className={styles.root}>
-      <ul className={styles.messagesList}>
-        {messages === null ? (
-          <li className={styles.noMessage}>Загрузка...</li>
-        ) : null}
-        {messages !== null && !messages.length ? (
-          <li className={styles.noMessage}>Нет сообщений</li>
-        ) : null}
-        {messages !== null && messages.length
-          ? messages.map((message) => (
-              <li className={styles.messageItem}>
-                <div className={styles.messageText}>
-                  <div className={styles.messageSender}>{message.sender}</div>
-                  {message.text}
-                </div>
-                <span className={styles.messageTime}>{message.time}</span>
-              </li>
-            ))
-          : null}
-      </ul>
-      <form className={styles.newMessagePanel}>
-        <div className={styles.usernameContainer}>
-          <label className={styles.usernameLabel} htmlFor="username">
+    <Box
+      sx={{
+        minWidth: 320,
+        maxWidth: 900,
+        height: "100vh",
+        margin: "auto",
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
+      <Stack
+        ref={messagesStackRef}
+        onScroll={(e) => {
+          console.log(e);
+        }}
+        p={"14px"}
+        spacing={2}
+        sx={{
+          width: "100%",
+          height: "100%",
+          overflowY: "auto",
+          margin: 0,
+          boxSizing: "border-box",
+          background: "#f7fafc",
+        }}
+      >
+        <Typography
+          variant="body1"
+          textAlign="center"
+          color="grey"
+          lineHeight={25}
+        >
+          {messages === null
+            ? "Загрузка..."
+            : messages !== null && !messages.length
+            ? "Нет сообщений"
+            : null}
+        </Typography>
+
+        {messages !== null &&
+          messages.length &&
+          messages.map((message) => (
+            <Box position="relative">
+              <Typography
+                variant="body1"
+                padding={2}
+                pr={8}
+                borderRadius={1}
+                sx={{ background: "#e1e8f0", wordBreak: "break-all" }}
+              >
+                <Typography
+                  variant="caption"
+                  display="block"
+                  fontWeight={600}
+                  color="#4974ad"
+                >
+                  {message.sender}
+                </Typography>
+                {message.text}
+              </Typography>
+              <Typography
+                variant="caption"
+                display="block"
+                right={6}
+                bottom={1}
+                color="#7b98ba"
+                sx={{ position: "absolute" }}
+              >
+                {message.time}
+              </Typography>
+            </Box>
+          ))}
+      </Stack>
+      <Box
+        component="form"
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (messageText) {
+            sendMessage(messageText);
+            setmessageText("");
+          }
+        }}
+        sx={{
+          display: "flex",
+          flexDirection: "row",
+          background: "#bfcdde",
+          maxHeight: "50px",
+        }}
+      >
+        <Box
+          sx={{ padding: "0px 8px 14px 0px", borderRight: "1px solid gray" }}
+        >
+          <InputLabel
+            shrink
+            htmlFor="bootstrap-input"
+            sx={{ fontSize: 15, color: "grey", top: 7, left: 8 }}
+          >
             Ваше имя:
-          </label>
-          <input
-            name="username"
+          </InputLabel>
+          <CustomMuiInput
             value={username}
             onChange={(e) => dispatch(mainActions.setUserName(e.target.value))}
-            className={styles.usernameValue}
-            size={10}
+            id="bootstrap-input"
+            sx={{ fontWeight: 600, marginLeft: 1 }}
           />
-        </div>
-        <input
-          className={styles.messageInput}
-          value={messageText}
-          onChange={(event) => {
-            setmessageText(event.target.value);
+        </Box>
+        <Box p={"10px"} width={"100%"}>
+          <Input
+            value={messageText}
+            onChange={(event) => {
+              setmessageText(event.target.value);
+            }}
+            placeholder="Введите сообщение"
+            fullWidth
+            autoFocus
+            disableUnderline
+          />
+        </Box>
+        <Button
+          endIcon={<SendIcon />}
+          type="submit"
+          sx={{
+            background: "none !important",
+            border: "none !important",
+            padding: "0 !important",
+            width: "40px",
+            color: "grey",
           }}
-          placeholder="Введите сообщение"
-          autoFocus
         />
-        <button
-          onClick={(event) => {
-            event.preventDefault();
-            if (messageText) {
-              sendMessage(messageText);
-              setmessageText("");
-            }
-          }}
-          className={styles.messageSendButton}
-        >
-          <img
-            className={styles.sendImage}
-            src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAABmJLR0QA/wD/AP+gvaeTAAADe0lEQVR4nO3bTahVVRQH8J8v6z0ry6KIPknySTUoSKIIIwJHhTRIaVDpLGyUM6EEkz5oFjWLRtnMaiQ0eSF9YkWkFGQEFYXSJ0WKPS2ft8G6l32M+/x47+x9jp77hzu55+y9/nvdvdde/7X3ZYQRRhhhBDvxNTbi4oa5NIIv0Ot/DuBlTDbKqDDukxww+BzDFFZjQXPUyuFtMfD38Sr+lpzxFTbggsbYFcCN+AczWCFiwRP4QXLEX3gJ1zfEMTteFAP9QJr2Y2IZTEmOmMEOrGqAY1Yswa9ikGuGPL8Nr2BacsZuPIZFhThmxwYxsB9x/izvXIFN2Cc54he8gGsLcMyKc7BHDOqpk7x7HtZil+SII9iOuzJyzI57xWAO4bpTbLMC2/Cv5IzPsA7nZuCYHW+KQWw7zXZX4mn8Ljnip/53l9VJMDeWimB3DCvn0H5c/PpfSo44LBx6S00cs+M5aSqPzaOflSIuHJWc8aGIHwvnyTErLsR+QfjRGvq7QewUf0qO+FbsKJfW0H8WrJPW8UU19blY5A57JUccFDnGzTXZqA0L8LEg+WzNfY+JbHKHiDWtFWF3CmKHsSyTjeVCZxySZsU3Qo+0QoS9Lki9kdlOa0XY1WKd9pQRQa0UYZv7RPaIlLkUWiPCFuH7PoEtmChpXGSZW/Gz40XY1v6zIlhbMf6HqB+WzuzGsR6fV7gcEXHq9hIEHsanFeM9fCKm5OISBCq4W+iWapb5ER5SQITdJDK73yrGp0Xau0rZfbxRETYulsaUlND0xFnDJlyem8D/uDQqwpYJr1f38UGRZLWyu0ejImwhHhD7dpXAu7kND8GkCNYHKjzeY34Sd67oNWBzGLLxmNTBJTBbENyrfBCcUDAItmkbvErBbbDTidCaiqHOpcITOi6GBnJ4tw7K4WpB5J4C9lpXEBmUxLZnttPKktigKDqdkURri6LVsvgzNfc9rCw+o2Vl8fWC2D5xUlQHzpiDkerR2CM19Heio7FLaui/djwvSO4yv+l4Rh6OVo/H75hD+6KiJAfeEqRfO812RUVJLgyuyBwUAzoVnDVXZKqXpJ48ybtn5SWpx8VAvjO72DnRNblrCnDMhiVScePBIc9bIUpyYnBVdmflu9aJklwYXJY+ilu1VJTkRKevy9/v+PpeK0VJTnT+LzPv6PifpkYYYYQROon/AMqXkYAs2UHIAAAAAElFTkSuQmCC"
-          />
-        </button>
-      </form>
-    </div>
+      </Box>
+    </Box>
   );
 };
 
