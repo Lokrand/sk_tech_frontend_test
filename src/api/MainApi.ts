@@ -6,30 +6,30 @@ import {
   query,
 } from "firebase/firestore";
 import { db } from "firebase.js";
+import { eventChannel } from "redux-saga";
+import { Message } from "types";
 
 class MainApi {
   static getMessagesList() {
-    return new Promise((resolve, reject) => {
+    return eventChannel((emit) => {
       const q = query(
         collection(db, "messages"),
-        orderBy("createdAt", "desc"),
+        orderBy("createdAt", "asc"),
         limit(50)
       );
-      onSnapshot(
-        q,
-        (QuerySnapshot) => {
-          const fetchedMessages: any[] = [];
-          QuerySnapshot.forEach((doc) => {
-            fetchedMessages.push({ ...doc.data(), id: doc.id });
-          });
-          const sortedMessages = fetchedMessages.sort(
-            (a, b) => a.createdAt - b.createdAt
-          );
-          console.log("sortedMessages", sortedMessages);
-          resolve(sortedMessages);
-        },
-        reject
-      );
+      const fetchedMessages: Message[] = [];
+      const unsubscribe = onSnapshot(q, (snapshot) => {
+        snapshot.docChanges().forEach((change) => {
+          if (change.type === "added") {
+            fetchedMessages.push({
+              ...(change.doc.data() as Message),
+              id: change.doc.id,
+            });
+          }
+        });
+        emit([...fetchedMessages]);
+      });
+      return unsubscribe;
     });
   }
 }

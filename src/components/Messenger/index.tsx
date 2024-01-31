@@ -19,7 +19,7 @@ import {
   Typography,
 } from "@mui/material";
 import { CustomMuiInput } from "./ui/custom-input";
-import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { addDoc, collection } from "firebase/firestore";
 import { db } from "firebase.js";
 import moment from "moment";
 
@@ -43,8 +43,6 @@ const Home: FC<IHome> = ({ username, messages, getMessagesList }) => {
   const [newMessage, setNewMessage] = useState("");
   const messagesStackRef = useRef(null);
 
-  console.log("main messages", messages);
-
   useEffect(() => {
     getMessagesList();
   }, []);
@@ -62,10 +60,9 @@ const Home: FC<IHome> = ({ username, messages, getMessagesList }) => {
     await addDoc(collection(db, "messages"), {
       text: newMessage,
       owner: username,
-      createdAt: serverTimestamp(),
+      createdAt: { seconds: Date.now() / 1000, nanoseconds: 0 },
     });
     setNewMessage("");
-    getMessagesList();
   };
 
   return (
@@ -134,7 +131,6 @@ const Home: FC<IHome> = ({ username, messages, getMessagesList }) => {
                   color="#7b98ba"
                   sx={{ position: "absolute" }}
                 >
-                  {/* @ts-expect-error */}
                   {moment(+message?.createdAt?.seconds * 1000).format("HH:mm")}
                 </Typography>
               </Box>

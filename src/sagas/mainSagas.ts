@@ -1,16 +1,19 @@
-import { all, takeEvery, put, delay, call } from "typed-redux-saga";
+import { all, takeEvery, put, delay, call, take } from "typed-redux-saga";
 import { mainActions } from "../actions";
 import { MainApi } from "../api";
 
 export function* mainMessagesList(): Generator<any, void, any> {
   try {
-    const data = yield call(MainApi.getMessagesList);
+    const channel = yield call(MainApi.getMessagesList);
     // yield delay(2000);
-    console.log(data);
-    yield put(mainActions.mainMessagesListSuccess(data));
+    while (true) {
+      const data = yield take(channel);
+      console.log("mainMessagesList", data);
+      yield put(mainActions.mainMessagesListSuccess(data));
+    }
   } catch (error) {
     yield put(mainActions.mainMessagesListFailed(error));
-    console.log("loading error", error);
+    console.error("loading error", error);
   }
 }
 
