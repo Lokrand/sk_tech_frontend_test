@@ -3,7 +3,6 @@ import {
   MAIN_MESSAGES_LIST_FETCH,
   MAIN_MESSAGES_LIST_SUCCESS,
   MAIN_MESSAGES_LIST_FAILED,
-  MAIN_SEND_MESSAGE,
   TAction,
   SET_USER_NAME,
 } from "../actions/mainActions";
@@ -37,20 +36,6 @@ const main = (state = initialState, action: TAction) => {
     case MAIN_MESSAGES_LIST_FAILED: {
       const newState = Object.assign({}, state);
       newState.messengerError = action.error;
-      return newState;
-    }
-
-    case MAIN_SEND_MESSAGE: {
-      const newState = Object.assign({}, state);
-      const messageList = [
-        ...(newState.messagesList ? newState.messagesList : []),
-        {
-          time: moment().format("HH:MM"),
-          text: action.messageText,
-          sender: newState.username,
-        },
-      ];
-      newState.messagesList = messageList;
       return newState;
     }
 

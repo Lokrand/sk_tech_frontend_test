@@ -19,12 +19,14 @@ import {
   Typography,
 } from "@mui/material";
 import { CustomMuiInput } from "./ui/custom-input";
+import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { db } from "firebase.js";
+import moment from "moment";
 
 export interface IHome {
   username: string;
   messages: MessagesList;
   getMessagesList: Function;
-  sendMessage: Function;
 }
 
 const mapStateToProps = (state: AppState) => ({
@@ -34,19 +36,14 @@ const mapStateToProps = (state: AppState) => ({
 
 const mapDispatchToProps = (dispatch: Dispatch) => ({
   getMessagesList: () => dispatch(mainActions.mainMessagesListFetch()),
-  sendMessage: (messageText: string) =>
-    dispatch(mainActions.mainSendMessage(messageText)),
 });
 
-const Home: FC<IHome> = ({
-  username,
-  messages,
-  getMessagesList,
-  sendMessage,
-}) => {
+const Home: FC<IHome> = ({ username, messages, getMessagesList }) => {
   const dispatch = useDispatch();
-  const [messageText, setmessageText] = useState("");
+  const [newMessage, setNewMessage] = useState("");
   const messagesStackRef = useRef(null);
+
+  console.log("main messages", messages);
 
   useEffect(() => {
     getMessagesList();
@@ -55,6 +52,21 @@ const Home: FC<IHome> = ({
   useEffect(() => {
     messagesStackRef.current.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  const sendMessageInDB = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (newMessage.trim() === "") {
+      alert("Enter valid message");
+      return;
+    }
+    await addDoc(collection(db, "messages"), {
+      text: newMessage,
+      owner: username,
+      createdAt: serverTimestamp(),
+    });
+    setNewMessage("");
+    getMessagesList();
+  };
 
   return (
     <Box
@@ -87,54 +99,54 @@ const Home: FC<IHome> = ({
         >
           {messages === null
             ? "Загрузка..."
-            : messages !== null && !messages.length
+            : messages !== null && !messages?.length
             ? "Нет сообщений"
             : null}
         </Typography>
 
         {messages !== null &&
-          messages.length &&
-          messages.map((message) => (
-            <Box position="relative">
-              <Typography
-                variant="body1"
-                padding={2}
-                pr={8}
-                borderRadius={1}
-                sx={{ background: "#e1e8f0", wordBreak: "break-all" }}
-              >
+          messages?.length &&
+          messages?.map((message) => {
+            return (
+              <Box position="relative" key={message.id}>
+                <Typography
+                  variant="body1"
+                  padding={2}
+                  pr={8}
+                  borderRadius={1}
+                  sx={{ background: "#e1e8f0", wordBreak: "break-all" }}
+                >
+                  <Typography
+                    variant="caption"
+                    display="block"
+                    fontWeight={600}
+                    color="#4974ad"
+                  >
+                    {message.owner}
+                  </Typography>
+                  {message.text}
+                </Typography>
                 <Typography
                   variant="caption"
                   display="block"
-                  fontWeight={600}
-                  color="#4974ad"
+                  right={6}
+                  bottom={1}
+                  color="#7b98ba"
+                  sx={{ position: "absolute" }}
                 >
-                  {message.sender}
+                  {/* @ts-expect-error */}
+                  {moment(+message?.createdAt?.seconds * 1000).format("HH:mm")}
                 </Typography>
-                {message.text}
-              </Typography>
-              <Typography
-                variant="caption"
-                display="block"
-                right={6}
-                bottom={1}
-                color="#7b98ba"
-                sx={{ position: "absolute" }}
-              >
-                {message.time}
-              </Typography>
-            </Box>
-          ))}
+              </Box>
+            );
+          })}
         <Box ref={messagesStackRef}></Box>
       </Stack>
       <Box
         component="form"
         onSubmit={(e) => {
           e.preventDefault();
-          if (messageText) {
-            sendMessage(messageText);
-            setmessageText("");
-          }
+          sendMessageInDB(e);
         }}
         sx={{
           display: "flex",
@@ -162,9 +174,9 @@ const Home: FC<IHome> = ({
         </Box>
         <Box p={"10px"} width={"100%"}>
           <Input
-            value={messageText}
+            value={newMessage}
             onChange={(event) => {
-              setmessageText(event.target.value);
+              setNewMessage(event.target.value);
             }}
             placeholder="Введите сообщение"
             fullWidth
