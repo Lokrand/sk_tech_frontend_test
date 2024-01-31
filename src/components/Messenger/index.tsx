@@ -53,7 +53,7 @@ const Home: FC<IHome> = ({
   }, []);
 
   useEffect(() => {
-    // messagesStackRef.current
+    messagesStackRef.current.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   return (
@@ -68,10 +68,6 @@ const Home: FC<IHome> = ({
       }}
     >
       <Stack
-        ref={messagesStackRef}
-        onScroll={(e) => {
-          console.log(e);
-        }}
         p={"14px"}
         spacing={2}
         sx={{
@@ -129,6 +125,7 @@ const Home: FC<IHome> = ({
               </Typography>
             </Box>
           ))}
+        <Box ref={messagesStackRef}></Box>
       </Stack>
       <Box
         component="form"
