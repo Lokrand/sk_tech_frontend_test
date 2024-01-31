@@ -1,11 +1,14 @@
 {
   "name": "react-scratch",
   "version": "1.0.0",
+  "homepage": "./sk_tech_frontend_test/",
   "description": "",
   "main": "index.js",
   "scripts": {
     "start": "webpack-dev-server --open",
-    "build": "webpack"
+    "build": "webpack",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist"
   },
   "engines": {
     "node": "<=v16.14.0"
@@ -39,6 +42,7 @@
     "babel-plugin-syntax-dynamic-import": "^6.18.0",
     "css-loader": "^2.1.0",
     "file-loader": "^6.2.0",
+    "gh-pages": "^6.1.1",
     "react-dom": "^17.0.2",
     "style-loader": "^0.23.1",
     "ts-loader": "^9.5.1",
