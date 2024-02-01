@@ -96,7 +96,7 @@ const Home: FC<IHome> = ({ username, messages, getMessagesList }) => {
         >
           {messages === null
             ? "Загрузка..."
-            : messages !== null && !messages?.length
+            : !messages?.length
             ? "Нет сообщений"
             : null}
         </Typography>
