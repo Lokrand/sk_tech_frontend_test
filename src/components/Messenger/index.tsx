@@ -101,8 +101,7 @@ const Home: FC<IHome> = ({ username, messages, getMessagesList }) => {
             : null}
         </Typography>
 
-        {messages !== null &&
-          messages?.length &&
+        {Boolean(messages?.length) &&
           messages?.map((message) => {
             return (
               <Box position="relative" key={message.id}>
